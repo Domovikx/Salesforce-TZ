@@ -1,0 +1,255 @@
+public class CustomSorting181112Controller {
+
+public String sortingColumn = 'Name';         // первичный столбец
+public String sortingOrder = 'ASC';         // первичная сортировка
+public String column = sortingColumn;         // первичное значение нового столбца
+public String query = 'SELECT Id, Name, Email, Contact_Level__c, AccountId, OwnerId, CreatedById, CreatedDate ' +
+                      'FROM Contact ' +
+                      'ORDER BY ' + sortingColumn +' '+ sortingOrder;
+
+
+// Сортировка начинается здесь ---------------------------------------
+// вначале пишем методы которые будут вызываться командой со стринички
+public void sortByName() {
+	sortingColumn = 'Name';
+	sortingOrder();
+}
+public void sortByEmail() {
+	sortingColumn = 'Email';
+	sortingOrder();
+}
+public void sortByContactLevel() {
+	sortingColumn = 'Contact_Level__c';
+	sortingOrder();
+}
+public void sortByAccountId() {
+	sortingColumn = 'AccountId';
+	sortingOrder();
+}
+public void sortByOwnerId() {
+	sortingColumn = 'OwnerId';
+	sortingOrder();
+}
+public void sortByCreatedById() {
+	sortingColumn = 'CreatedById';
+	sortingOrder();
+}
+public void sortByCreatedDate() {
+	sortingColumn = 'CreatedDate';
+	sortingOrder();
+}
+
+// проверяем- новый столбец или тот же
+// если столбец новый сортировка - ASC и обновляется запрос.
+public void sortingOrder() {
+	if (sortingColumn == column) {
+		sortingOrder = (sortingOrder == 'ASC') ? 'DESC' : 'ASC';
+	} else {
+		sortingOrder = 'ASC';
+		column = sortingColumn;
+	}
+	queryUpdate();
+}
+// конец сортировки --------------------------------------
+
+
+// Пагинация начинается здесь ---------------------------------
+// Вначале делаем выпадающий список - количество записей на странице
+public list<SelectOption> getPageSizeList(){ // список строк/страница
+	list<SelectOption> options = new list<SelectOption>();
+	options.add(new selectOption('1','1'));
+	options.add(new selectOption('5','5'));
+	options.add(new selectOption('10','10'));
+	options.add(new selectOption('25','25'));
+	options.add(new selectOption('50','50'));
+	options.add(new selectOption('100','100'));
+	return options;
+}
+
+// Сделаем выпадающий скисок с номерами страниц
+public list<SelectOption> getPageNumberList(){
+	list<SelectOption> rowPageNumber = new list<SelectOption>();
+	for (Integer i = 1; i <= TotalPages; i++) {
+		String strInt = String.valueOf(i);
+		rowPageNumber.add(new selectOption(strInt, strInt));
+	}
+	return rowPageNumber;
+}
+public ApexPages.StandardSetController setList {
+	get {
+		if (setList == null) { // проверка на наличие экземпляра контроллера
+			setList = new ApexPages.StandardSetController(Database.query(query));
+		}
+		if (this.PageSize == null) PageSize = 10; // дефаултное значение записей/стр, попробуй 7 или 8 =)
+		setList.setPageSize(PageSize); // количество записей/страница
+		return setList;
+	} set;
+}
+public Integer PageSize {
+	get; set {         // получаем количество записей на странице
+		if(value != null) this.PageSize = value;
+	}
+}
+public Integer PageNumber {
+	get {         // получаем текущий номер страницы
+		this.PageNumber = setList.getPageNumber();
+		return this.PageNumber;
+	}
+	set {         // это чтобы перейти к введенному номеру страницы
+		setList.setPageNumber(value);
+		// это должно работать, но не работает, поэтому > PageNumberGo();
+	}
+}
+public void PageNumberGo() {
+	setList.setPageNumber(this.PageNumber);
+}
+
+public Integer TotalPages {// cчитаем количество страниц
+	get {         // рассчитываем колво страниц
+		if (setList.getResultSize() <= 10)
+			this.TotalPages = 1;
+		if (Math.Mod ( setList.getResultSize(), setList.getPageSize() ) == 0)
+			this.TotalPages = ( setList.getResultSize() / setList.getPageSize() );
+		else this.TotalPages = ( setList.getResultSize() / setList.getPageSize() )+1;
+		return TotalPages;
+	}
+	set;
+}
+public Integer TotalRecords {
+	get { // колво записей
+		this.TotalRecords = setList.getResultSize();
+		return TotalRecords;
+	}
+	set;
+}
+
+// Конец пагинации ----------------------------------------
+
+
+// Пишем поиск Search
+public String searchString {get; set;}         // получаем текст который мы вводим в поле поиска
+public void search(){
+	if (searchString !='') {
+		// String searchWorld = '%\'' + searchString + '%\''; // *+текст+*
+		String searchWorld = '\'' + searchString + '%\''; // текст+*
+		query = 'SELECT Id, Name, Email, Contact_Level__c, AccountId, OwnerId, CreatedById, CreatedDate ' +
+		        'FROM Contact ' +
+		        'WHERE Name like ' + searchWorld + ' ' +
+		        'ORDER BY ' + sortingColumn +' '+ sortingOrder;
+
+		setList = new ApexPages.StandardSetController(Database.query(query));
+	}
+}
+// конец поиска
+
+
+// Пишем Редактирование и Удаление записей столбец
+// Edit записи - реализовано только на странице - переходом по ссылке
+// DEL записи - делаем на странице и здесь
+public string SelectedRecordID { get; set; }         // фиксация выбранной записи для удаления
+public void DeleteRecord(){
+	if (SelectedRecordID == null) { return; }         // если НЕТ ссылки
+
+	Contact tobeDeleted = null;
+	for (Contact a : [SELECT Id FROM Contact]) {         // находим ID записи учетной записи по запросу
+		if (a.Id == SelectedRecordID) {
+			tobeDeleted = a;
+			break;
+		}         // Возможно можно сразу найти конкретную запись через where, пока оставлю так.
+	}
+	if (tobeDeleted != null) { Delete tobeDeleted; }         // если найдена запись учетной записи, удалите ее
+
+	queryUpdate();         // обновляем запрос
+	getContact();         // обновить лист контактов
+}
+// ------------------------------------------------------------
+
+
+// Наш попап --------------------------------------------------
+public boolean displayPopup {get; set;}
+public void popupShow(){
+	displayPopup = true;
+}
+public void popupClose(){
+	displayPopup = false;
+}
+// конец попапа -------------------------------------------------
+
+
+public void queryUpdate() {         // обновляем запрос и создаем экземпляр стандартного контроллера
+	query = 'SELECT Id, Name, Email, Contact_Level__c, AccountId, OwnerId, CreatedById, CreatedDate ' +
+	        'FROM Contact ' +
+	        'ORDER BY ' + sortingColumn +' '+ sortingOrder;
+	setList = new ApexPages.StandardSetController(Database.query(query));
+}
+public List<Contact> getContact() {         // получаем в наш лист, данные с экземпляра стандартного контроллера
+	return (List<Contact>) setList.getRecords();
+}
+
+
+// Добавление нового контакта --------------------------------
+public String newFirstName {get; set;}         // 1
+public String newLastName {get; set;}         // 2
+public String newEmail {get; set;}         // 3
+public String newPhone {get; set;}         // 4
+public String newAccount {get; set;}         // 5
+
+public String newContactLevel {get; set;}         // 6 . Сетим выбранное в списке
+public list<SelectOption> getContactLevel(){         // Гетим наш список
+	list<SelectOption> ContactLevel = new list<SelectOption>();
+	ContactLevel.add(new SelectOption('Primary','Primary'));
+	ContactLevel.add(new SelectOption('Secondary','Secondary'));
+	ContactLevel.add(new SelectOption('Tertiary','Tertiary'));
+	return ContactLevel;
+}
+
+
+// памятка по API name
+// https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_objects_contact.htm
+public pageReference save(){
+
+	if (newAccount != '') { // если строчка Аккаунта имеет данные
+
+		try { // пробуем добавить данные в БД
+			Account acc = new Account(Name = newAccount);
+			insert acc; // Вначале добавляем аккаунт, чтобы потом взять его ID
+
+			Contact con = new Contact(
+				FirstName = newFirstName, LastName = newLastName, Email = newEmail,
+				Phone = newPhone, Contact_Level__c = newContactLevel, AccountId = acc.ID);
+			insert con;
+		}
+		catch (DMLException e) {
+			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR,'Error creating new contact.'));
+			return null;
+		}
+	}
+	else { // если строчка Аккаунта пуста
+
+		try {
+			Contact con = new Contact(
+				FirstName = newFirstName, LastName = newLastName, Email = newEmail,
+				Phone = newPhone, Contact_Level__c = newContactLevel);
+			insert con;
+		}
+		catch (DMLException e) {
+			ApexPages.addMessage(new ApexPages.message(ApexPages.severity.ERROR,'Error creating new contact.'));
+			return null;
+		}
+	}
+
+	ApexPages.addMessage(new ApexPages.message(ApexPages.severity.CONFIRM,'New contact "'+newFirstName+' '+newLastName+'" successfully created.'));
+	newFirstName='';                 // возвращаем значения поумолчанию
+	newLastName='';
+	newEmail='';
+	newPhone='';
+	newAccount='';
+	newContactLevel='Primary';
+
+	//popupClose(); // если понадобится закрытие окошка сразу после создания
+	return null;
+}
+// -----------------------------------------------------------
+
+}
+// конец контроллера =)

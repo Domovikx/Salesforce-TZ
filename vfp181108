@@ -1,0 +1,207 @@
+<apex:page controller="CustomSorting181112Controller">
+
+
+    <!-- 
+Необходимо отобразить следующие поля: 
+1 Name (link), 2 Email, 3 Contact Level (picklist), 4 Account (lookup), 
+5 Owner (lookup), 6 Created By (lookup), 7 Created Date.
+-->
+
+    <style type="text/css">
+        .colorTextBold {
+            font-style: bold;
+        }
+
+        .popupCust {
+            background-color: white;
+            border-width: 0px;
+            border-style: solid;
+            z-index: 9001;
+            left: 50%;
+            padding: 11px;
+            position: absolute;
+            width: 600px;
+            margin-left: -240px;
+            top: 100px;
+        }
+
+        .popupBackground {
+            background-color: black;
+            opacity: 0.20;
+            filter: alpha(opacity=20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9000;
+        }
+    </style>
+
+    <apex:form id="form">
+        <apex:pageBlock title="Test task Success Craft 181108.002" id="thisBlock">
+
+            <!-- поле поиска -->
+            <apex:pageMessages />
+            <apex:pageBlockButtons location="top" style="float:right">
+                <apex:inputText value="{!searchString}" label="Input" /> &nbsp;
+                <apex:commandButton value="Search Name" action="{! search }" />
+
+                <!-- Popup -->
+                <apex:commandButton value=" Create a New Contact " action="{!popupShow}" rerender="popupPanel" />
+                <apex:outputPanel id="popupPanel">
+                    <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayPopUp}" />
+                    <apex:outputPanel styleClass="popupCust" layout="block" rendered="{!displayPopUp}">
+
+                        <p align="center" style="font-weight:bold">Create a New Contact</p> 
+                        <p align="center"> Hello, you see this text as this program is a test task. Clicking on this link you can express your
+                            financial gratitude to the developer of this application in dollars equivalent. Thank you very
+                            much. Your developer
+                            <a href="https://vk.com/domovikx" target="_blank" style="font-weight:bold"> VK.com/DomovikX </a>.</p>
+
+
+                        <!-- Create New Contact-->
+                        <!--  
+- 1.First Name, 2.Last Name *, 3.Email *, 4.Account 
+- 5.Contact Level,
+- кнопки - Save или Cancel 
+- * обязательные 
+- Contact Level - список: Primary, Secondary, Tertiary 
+-->
+                        <p>
+                            <apex:pageBlockSection columns="2">
+                                <apex:inputText label="First Name" value="{!newFirstName}" />
+                                <apex:inputText label="Last Name * " value="{!newLastName}" required="true" />
+                                <apex:inputText label="E-mail * " value="{!newEmail}" required="true" />
+                                <apex:inputText label="Phone" value="{!newPhone}" />
+                                <apex:inputText label="Account" value="{!newAccount}" />
+
+                                <apex:SelectList label="Contact Level" size="1" value="{!newContactLevel}">
+                                    <apex:selectOptions value="{!ContactLevel}" />
+                                </apex:SelectList>
+
+                            </apex:pageBlockSection>
+                            <p align="right">
+                                <span class="colorTextBold">*</span> - Required fields</p>
+                            <p align="center">
+                                <apex:commandButton value="Save" action="{!save}" rerender="popupPanel" />
+                                <apex:commandButton value="Close" immediate="true" html-formnovalidate="formnovalidate" action="{!popupClose}" rerender="popupPanel"
+                                />
+                            </p>
+                        </p>
+                        <apex:pageMessages />
+                        <!-- сообщение об ощибках сюда -->
+                    </apex:outputPanel>
+                </apex:outputPanel>
+
+                <!-- Это эммитация ссылки под кнопку Create New Contact -->
+                <apex:commandLink target="_blank" styleClass="btn" style="text-decoration:none; padding:4px; float:right" action="{!URLFOR($Action.Contact.NewContact)}"
+                    value=" New Contact (full form) " />
+
+            </apex:pageBlockButtons>
+
+            <!-- табличка  -->
+            <apex:pageBlockTable value="{!Contact}" var="row" id="thisTable">
+
+                <apex:column title="Edit / Del">
+                    <apex:outputLink value="/{!row.id}/e?retURL=/apex/{!$CurrentPage.Name}" style="font-weight:bold" target="_blank">
+                        Edit
+                    </apex:outputLink>
+                    &nbsp;|&nbsp;
+                    <a href="javascript:if (window.confirm('Are you sure you want to DELETE the record?')) DeleteRecord('{!row.Id}');" style="font-weight:bold">
+                        Del
+                    </a>
+                </apex:column>
+
+                <apex:column value="{!row.Name}">
+                    <apex:facet name="header">
+                        <apex:commandLink action="{!sortByName}" reRender="thisBlock">
+                            <apex:outputText value="{! $ObjectType.Contact.Fields.Name.Label}" />
+                        </apex:commandLink>
+                    </apex:facet>
+                </apex:column>
+
+                <apex:column value="{!row.Email}">
+                    <apex:facet name="header">
+                        <apex:commandLink action="{!sortByEmail}" reRender="thisBlock">
+                            <apex:outputText value="{!$ObjectType.Contact.Fields.Email.Label}" />
+                        </apex:commandLink>
+                    </apex:facet>
+                </apex:column>
+
+                <apex:column value="{!row.Contact_Level__c}">
+                    <apex:facet name="header">
+                        <apex:commandLink action="{!sortByContactLevel}" reRender="thisBlock">
+                            <apex:outputText value="{! $ObjectType.Contact.Fields.Contact_Level__c.Label }" />
+                        </apex:commandLink>
+                    </apex:facet>
+                </apex:column>
+
+                <apex:column value="{!row.AccountId}">
+                    <apex:facet name="header">
+                        <apex:commandLink action="{!sortByAccountId}" reRender="thisBlock">
+                            <apex:outputText value="Accounts" />
+                        </apex:commandLink>
+                    </apex:facet>
+                </apex:column>
+
+                <apex:column value="{!row.OwnerId}">
+                    <apex:facet name="header">
+                        <apex:commandLink action="{!sortByOwnerId}" reRender="thisBlock">
+                            <apex:outputText value="Owners" />
+                        </apex:commandLink>
+                    </apex:facet>
+                </apex:column>
+
+                <apex:column value="{!row.CreatedById}">
+                    <apex:facet name="header">
+                        <apex:commandLink action="{!sortByCreatedById}" reRender="thisBlock">
+                            <apex:outputText value="Created By" />
+                        </apex:commandLink>
+                    </apex:facet>
+                </apex:column>
+
+                <apex:column value="{!row.CreatedDate}">
+                    <apex:facet name="header">
+                        <apex:commandLink action="{!sortByCreatedDate}" reRender="thisBlock">
+                            <apex:outputText value="{!$ObjectType.Contact.Fields.CreatedDate.Label}" />
+                        </apex:commandLink>
+                    </apex:facet>
+                </apex:column>
+
+            </apex:pageBlockTable>
+
+
+            <!-- кнопочки вперед-назад...  -->
+            <div align="center" id="button">
+                <apex:commandButton action="{! setList.first }" value=" << " title="First Page" disabled="{!!setList.HasPrevious}" reRender="thisBlock,button"
+                />
+                <apex:commandButton action="{! setList.previous }" value=" Previous " disabled="{!!setList.HasPrevious}" reRender="thisBlock,button"
+                /> &nbsp;
+                <apex:selectList value="{!PageNumber}" size="1" title="Number Page">
+                    <apex:selectOptions value="{!PageNumberList}" />
+                    <apex:actionSupport event="onchange" action="{!PageNumberGo}" reRender="thisBlock" />
+                </apex:selectList>
+                &nbsp;
+                <apex:SelectList value="{!PageSize}" size="1" title="Records on Pages">
+                    <apex:selectOptions value="{!PageSizeList}" />
+                    <apex:actionSupport event="onchange" reRender="thisBlock" />
+                </apex:SelectList>
+                &nbsp;
+                <apex:commandButton action="{! setList.next }" value=" Next > " disabled="{!!setList.HasNext}" reRender="thisBlock,button"
+                />
+                <apex:commandButton action="{! setList.last }" value=" >> " title="Last Page" disabled="{!!setList.HasNext}" reRender="thisBlock,button"
+                />
+            </div>
+            <div align="center">
+                    <apex:outputLabel value=" Total pages: {!TotalPages} | Total records: {!TotalRecords}" /> 
+            </div>
+
+        </apex:pageBlock>
+
+        <apex:actionFunction name="DeleteRecord" action="{!DeleteRecord}" reRender="form">
+            <apex:param name="recordID" value="" assignTo="{!SelectedRecordID}" />
+        </apex:actionFunction>
+
+    </apex:form>
+</apex:page>

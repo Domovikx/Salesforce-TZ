@@ -1,0 +1,84 @@
+trigger CustomSorting181112Trigger on Contact (after insert, before delete) {
+
+	// Хэлпы тут:
+	// https://salesforce.stackexchange.com/questions/27241/write-a-trigger-that-automatically-create-a-contact-when-account-is-created
+	// https://trailhead.salesforce.com/en/content/learn/modules/apex_triggers/apex_triggers_intro
+	// https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_triggers.htm
+	// https://developer.salesforce.com/forums/?id=906F00000008qelIAA
+	// https://salesforce-developer.ru/forum/topic-triggery-i-case
+
+/*
+   1. При создании нового контакта автоматически должен создаваться Case при помощи триггера.
+   2.1. Case должен привязываться к новому контакту.
+   2.2. Если контакт ссылается на аккаунт, тогда новый Case также должен ссылаться на
+   этот аккаунт.
+   3.
+   3.1. Поле Status у нового Case должно принимать значение ‘Working’,
+   3.2. а поле Case Origin должно принимать значение ‘New Contact’.
+   4.
+   4.1. Поле Owner у Case должен быть таким же как Owner у аккаунта, на которого ссылается контакт.
+   4.2. Также поле Priority у нового Case должно зависеть от того,
+   какое значение было выбрано в поле Contact Level у контакта. Если оно было
+   ‘Primary’ тогда Priority = ‘High’, если оно было
+   ‘Secondary’ тогда Priority = ‘Medium’, если оно было
+   ‘Tertiary’ тогда Priority = ‘Low’
+ */
+
+	if (Trigger.isInsert) {
+		//Действия - after insert
+
+		// Создаем новый лист для записей Кейса
+		// Лист создается на случай добавления множества записей, за один раз
+		List<Case> newCaseList = new List<Case>();
+
+		for(Contact con : trigger.new) {
+
+			Case newCase = new Case();
+
+			// Реализуем зависимость полей Priority(Case) и Contact Level(Contact)
+			if (con.Contact_Level__c == 'Primary') {
+				newCase.Priority = 'High';
+			} else if (con.Contact_Level__c == 'Secondary') {
+				newCase.Priority = 'Medium';
+			} else if (con.Contact_Level__c == 'Tertiary') {
+				newCase.Priority = 'Low'; 
+			}
+
+			// Значение полей поумолчанию, при создании нового контакта
+			newCase.Status = 'Working';
+			newCase.Origin = 'New Contact';
+			newCase.ContactId = con.Id;
+
+			// Если создается новый Аккаунт
+			if (newCase.AccountId != null) {
+				// 2.2. Если контакт ссылается на аккаунт, тогда
+				// новый Case также должен ссылаться на этот аккаунт.
+				newCase.AccountId = con.AccountId;
+				// 4.1. Поле Owner у Case(OwnerId) должен быть таким же как
+				// Owner(acc[0].OwnerId) у аккаунта, на которого ссылается контакт.
+				List<Account> acc = new List<Account>([SELECT Id, OwnerId FROM Account WHERE Id =: newCase.AccountId]);
+				newCase.OwnerId = acc[0].OwnerId;
+			}
+
+			// Добавляем запись в лист Кейс
+			newCaseList.add(newCase);
+		}
+
+		// Добавляем весь лист Кейс в ДБ
+		insert newCaseList;
+	}
+
+	else if (Trigger.isDelete) {
+
+		Set<Id> ConIDs = Trigger.oldMap.keyset();
+		
+		delete [SELECT Id FROM Case WHERE ContactId IN:ConIDs]; // Удаляет Кейсы
+		// delete [SELECT Id FROM Account WHERE OwnerId IN:ConIDs]; // Хотел сделать удаление аккаунта, туплю...
+
+		// https://stackoverflow.com/questions/14843513/salesforce-trigger-deleting-object
+		// Контекстные переменные триггера
+		// https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_triggers_context_variables.htm
+
+	}
+
+}

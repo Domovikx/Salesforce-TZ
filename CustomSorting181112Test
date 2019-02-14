@@ -1,0 +1,130 @@
+@isTest
+private class CustomSorting181112Test {    
+    // https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_qs_test.htm
+    
+    @isTest static void testVariables(){        
+        // Вначале делаем экземпляр нашего контроллера
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();  
+        
+        // Теперь проверяем некоторые гет-сет поля
+        // https://salesforce.stackexchange.com/questions/144699/unable-to-cover-get-set-in-apex-test-class
+        controller.newFirstName='test';
+        controller.newLastName='test';
+        controller.newEmail='TestEmail100@gmail.com';
+        controller.newPhone='+375251223100';
+        controller.newAccount='test';
+        controller.newContactLevel='Tertiary';   
+        
+        controller.PageSize=1;
+        controller.PageNumber=1;
+        controller.TotalPages=1;     
+                
+        controller.TotalRecords=1;
+        controller.searchString='test';
+        controller.SelectedRecordID='test';
+        
+        controller.displayPopup=true;
+        controller.popupShow();
+        controller.popupClose();   
+    }  
+    
+    
+    @isTest static void testMethods(){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller(); 
+        
+        controller.sortByAccountId();
+        controller.sortByContactLevel();
+        controller.sortByCreatedById(); 
+        controller.sortByCreatedDate();        
+        controller.sortByEmail();
+        controller.sortByName();
+        controller.sortByOwnerId();  
+        
+        controller.PageNumberGo();  
+        controller.DeleteRecord();
+        controller.save();
+        controller.search();        
+    }   
+    
+    
+    @isTest static void testLists(){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller(); 
+         
+        controller.getContact();  
+        controller.getContactLevel();       
+        controller.getPageSizeList(); 
+		controller.getPageNumberList();        
+    }
+    
+    @isTest static void sortingOrderTest(){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();
+        controller.sortingOrder();
+        controller.sortingOrder();
+    }    
+    
+    @isTest static void saveTest001(){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller(); 
+             
+        controller.newAccount='';
+        controller.newFirstName = 'TestFirstName1'; 
+        controller.newLastName = 'TestLastName1';
+        controller.newEmail = 'TestEmail1@gmail.com';
+        controller.newPhone = '+375251223001';
+        controller.newContactLevel = 'Primary';  
+        controller.save();
+    }
+    
+    @isTest static void saveTest002(){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();     
+        
+        controller.newAccount='';
+        controller.newFirstName = 'TestFirstName1'; 
+        controller.newLastName = '';
+        controller.newEmail = ''; 
+        controller.newPhone = '';
+        controller.newContactLevel = 'Primary';  
+        controller.save(); 
+    } 
+    
+    @isTest static void saveTest003(){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();     
+        
+        controller.newAccount='TestAccount';
+        controller.newFirstName = 'TestFirstName3'; 
+        controller.newLastName = 'TestLastName3';
+        controller.newEmail = 'TestEmail3@gmail.com';
+        controller.newPhone = '+375251223003';
+        controller.newContactLevel = 'Primary';   
+        controller.save();  
+    }    
+    
+    @isTest static void DeleteRecordTest001(){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();      
+        
+        controller.newAccount='TestAccount';
+        controller.newFirstName = 'TestFirstName3'; 
+        controller.newLastName = 'TestLastName3';
+        controller.newEmail = 'TestEmail3@gmail.com';
+        controller.newPhone = '+375251223003';
+        controller.newContactLevel = 'Primary';   
+        
+        Contact con = new Contact( // интересно. если ставишь значения напрямую, бажит =/
+            FirstName = controller.newFirstName, 
+            LastName = controller.newLastName, 
+            Email = controller.newEmail,
+            Phone = controller.newPhone, 
+            Contact_Level__c = controller.newContactLevel);
+        insert con;
+        
+        controller.SelectedRecordID = con.Id;
+        controller.DeleteRecord();
+        controller.DeleteRecord();        
+    }
+    
+    @isTest static void getPageNumberListTest(){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();  
+        controller.TotalPages=10;
+        controller.getPageNumberList();
+    }
+    
+}

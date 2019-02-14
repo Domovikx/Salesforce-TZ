@@ -1,0 +1,86 @@
+@isTest
+public class TestCustomSorting181112Trigger {
+    
+    @isTest static void test1Primary (){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();
+        
+        controller.newAccount='TestAccount';
+        controller.newFirstName = 'TestFirstName3';
+        controller.newLastName = 'TestLastName3';
+        controller.newEmail = 'TestEmail3@gmail.com';
+        controller.newPhone = '+375251223003';
+        controller.newContactLevel = 'Primary';
+        
+        Contact con = new Contact( // интересно. если ставишь значения напрямую, бажит =/
+            FirstName = controller.newFirstName,
+            LastName = controller.newLastName,
+            Email = controller.newEmail,
+            Phone = controller.newPhone,
+            Contact_Level__c = controller.newContactLevel);
+        insert con;
+        
+        controller.SelectedRecordID = con.Id;
+        controller.DeleteRecord();
+        controller.DeleteRecord();
+    }
+    
+    @isTest static void test2Secondary (){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();
+        
+        controller.newAccount='TestAccount';
+        controller.newFirstName = 'TestFirstName3';
+        controller.newLastName = 'TestLastName3';
+        controller.newEmail = 'TestEmail3@gmail.com';
+        controller.newPhone = '+375251223003';
+        controller.newContactLevel = 'Secondary';
+        
+        Contact con = new Contact( // интересно. если ставишь значения напрямую, бажит =/
+            FirstName = controller.newFirstName,
+            LastName = controller.newLastName,
+            Email = controller.newEmail,
+            Phone = controller.newPhone,
+            Contact_Level__c = controller.newContactLevel);
+        insert con;
+    }
+    
+    @isTest static void test3Secondary (){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();
+        
+        controller.newAccount='TestAccount';
+        controller.newFirstName = 'TestFirstName3';
+        controller.newLastName = 'TestLastName3';
+        controller.newEmail = 'TestEmail3@gmail.com';
+        controller.newPhone = '+375251223003';
+        controller.newContactLevel = 'Secondary';
+        
+        Contact con = new Contact( // интересно. если ставишь значения напрямую, бажит =/
+            FirstName = controller.newFirstName,
+            LastName = controller.newLastName,
+            Email = controller.newEmail,
+            Phone = controller.newPhone,
+            Contact_Level__c = controller.newContactLevel);
+        insert con;
+    }
+    
+    @isTest static void test3Tertiary (){
+        CustomSorting181112Controller controller = new CustomSorting181112Controller();
+        
+        controller.newAccount='TestAccount';
+        controller.newFirstName = 'TestFirstName3';
+        controller.newLastName = 'TestLastName3';
+        controller.newEmail = 'TestEmail3@gmail.com';
+        controller.newPhone = '+375251223003';
+        controller.newContactLevel = 'Tertiary';
+        
+        Contact con = new Contact( // интересно. если ставишь значения напрямую, бажит =/
+            FirstName = controller.newFirstName,
+            LastName = controller.newLastName,
+            Email = controller.newEmail,
+            Phone = controller.newPhone,
+            Contact_Level__c = controller.newContactLevel);
+        insert con;
+    }  
+    
+    
+    
+}
